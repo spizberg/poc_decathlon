@@ -194,7 +194,7 @@ class Ui_DemoWindow(object):
         self.labelDecathlon.setText("")
         self.labelDemoTitle.setText(QCoreApplication.translate("DemoWindow", u"IDSHOES - CELLULE D'IDENTIFICATION DE MODELE DE CHAUSSURE", None))
         self.pushButtonBack.setText(QCoreApplication.translate("DemoWindow", u"Retour", None))
-        self.label.setText(QCoreApplication.translate("DemoWindow", u"Nom du mod\u00e8le : ", None))
+        self.label.setText(QCoreApplication.translate("DemoWindow", u"Cat\u00e9gorie de tri : ", None))
         self.bacPredictionLabel.setText(QCoreApplication.translate("DemoWindow", u"En attente...", None))
         self.pushButtonStart.setText(QCoreApplication.translate("DemoWindow", u"DETECTER", None))
         self.labelVideo1.setText("")

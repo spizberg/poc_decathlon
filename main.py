@@ -17,8 +17,9 @@ DELAY = 1
 MODEL = torch.hub.load('ultralytics/yolov5', "custom", path="/home/nathan/Code/POC_DECATHLON/model/best.pt")
 MODEL.eval()
 MODEL.max_det = 2
-MODEL.conf = 0.001
-THRESHOLD = 0.6
+MODEL.conf = 0.4
+THRESHOLD_TWO = 0.6
+THRESHOLD_ONE = 0.7
 SIDE_WEIGHT = 0.7
 FRONT_WEIGHT = 0.3
 MODEL_TO_CATEGORY = [
@@ -123,7 +124,7 @@ class DemoWindow(QMainWindow):
     def detect(self):
         # Directory name with model name
         self.labelBac.setText("En attente...")
-        global SIDE_WEIGHT, FRONT_WEIGHT, THRESHOLD, MODEL_TO_CATEGORY
+        global SIDE_WEIGHT, FRONT_WEIGHT, THRESHOLD_TWO, THRESHOLD_ONE, MODEL_TO_CATEGORY
         if (self.results[0] is not None) and (self.results[1] is not None):
             predictions = MODEL(self.results)
             predictions_df = predictions.pandas().xyxy
@@ -134,11 +135,19 @@ class DemoWindow(QMainWindow):
                 predictions_df[1].confidence = predictions_df[1].confidence * FRONT_WEIGHT
                 prediction_df = predictions_df[0].append(predictions_df[1], ignore_index=True)\
                     .groupby(by="class").sum().reset_index().sort_values(by=['confidence'], ascending=False)
-                if prediction_df.confidence[0] >= THRESHOLD:
+                if prediction_df.confidence[0] >= THRESHOLD_TWO:
                     self.labelBac.setText(MODEL_TO_CATEGORY[prediction_df['class'][0]])
                 else:
                     self.labelBac.setText("Non reconnu, veuillez réessayez...")
-                print("Predictions : ", prediction_df)
+                print("Predictions Two: ", prediction_df)
+            elif len(predictions_df) == 1:
+                prediction_df = predictions_df[0].groupby(by="class").sum().reset_index()\
+                    .sort_values(by=['confidence'], ascending=False)
+                if prediction_df.confidence[0] >= THRESHOLD_ONE:
+                    self.labelBac.setText(MODEL_TO_CATEGORY[prediction_df['class'][0]])
+                else:
+                    self.labelBac.setText("Non reconnu, veuillez réessayez...")
+                print("Prediction One : ", prediction_df)
             else:
                 self.labelBac.setText("Non reconnu, veuillez réessayez...")
 
