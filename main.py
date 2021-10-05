@@ -65,11 +65,13 @@ class DemoWindow(QMainWindow):
 
         self.thread1 = VideoThreadSide()
         self.thread1.change_pixmap_signal.connect(self.update_image_webcam_1)
+        self.thread1.change_pixmap_signal.connect(self.get_frame_side)
 
         self.thread1.start()
 
         self.thread2 = VideoThreadFront()
         self.thread2.change_pixmap_signal.connect(self.update_image_webcam_2)
+        self.thread2.change_pixmap_signal.connect(self.get_frame_front)
 
         self.thread2.start()
 
@@ -103,8 +105,6 @@ class DemoWindow(QMainWindow):
     def detect(self):
         # Directory name with model name
         global SIDE_WEIGHT, FRONT_WEIGHT
-        self.thread1.change_pixmap_signal.connect(self.get_frame_side)
-        self.thread2.change_pixmap_signal.connect(self.get_frame_front)
         if (self.results[0] is not None) and (self.results[1] is not None):
             predictions = MODEL(self.results)
             predictions_df = predictions.pandas().xyxy
@@ -132,10 +132,6 @@ class DemoWindow(QMainWindow):
     def get_frame_side(self, frame):
         self.mutex.lock()
         img = frame[..., ::-1]
-        try:
-            self.thread1.change_pixmap_signal.disconnect(self.get_frame_side)
-        except:
-            pass
         self.results[0] = img
         self.mutex.unlock()
 
@@ -143,10 +139,6 @@ class DemoWindow(QMainWindow):
     def get_frame_front(self, frame):
         self.mutex.lock()
         img = frame[..., ::-1]
-        try:
-            self.thread2.change_pixmap_signal.disconnect(self.get_frame_front)
-        except:
-            pass
         self.results[1] = img
         self.mutex.unlock()
 
@@ -165,7 +157,6 @@ class VideoThreadSide(QThread):
         self.vid = cv2.VideoCapture(WEBCAM_ID_1)
 
     change_pixmap_signal = Signal(np.ndarray)
-    get_pixmap_signal = Signal(np.ndarray)
 
     def run(self):
         while self.run_flag:
@@ -184,14 +175,12 @@ class VideoThreadSide(QThread):
 
 
 class VideoThreadFront(QThread):
-
     def __init__(self):
         super(VideoThreadFront, self).__init__()
         self.run_flag = True
         self.vid = cv2.VideoCapture(WEBCAM_ID_2)
 
     change_pixmap_signal = Signal(np.ndarray)
-    get_pixmap_signal = Signal(np.ndarray)
 
     def run(self):
         while self.run_flag:
