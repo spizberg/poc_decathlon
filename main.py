@@ -11,9 +11,6 @@ import torch
 
 WEBCAM_ID_1 = 2
 WEBCAM_ID_2 = 4
-WIDTH = 640
-HEIGHT = 480
-DELAY = 1
 MODEL = torch.hub.load('ultralytics/yolov5', "custom", path="/home/nathan/Code/POC_DECATHLON/model/best.pt")
 MODEL.eval()
 MODEL.max_det = 2
@@ -139,7 +136,7 @@ class DemoWindow(QMainWindow):
                     self.labelBac.setText(MODEL_TO_CATEGORY[prediction_df['class'][0]])
                 else:
                     self.labelBac.setText("Non reconnue, veuillez réessayez...")
-                print("Predictions Two: ", prediction_df)
+                # print("Predictions Two: ", prediction_df)
             elif len(predictions_df) == 1:
                 prediction_df = predictions_df[0].groupby(by="class").sum().reset_index()\
                     .sort_values(by=['confidence'], ascending=False)
@@ -147,7 +144,7 @@ class DemoWindow(QMainWindow):
                     self.labelBac.setText(MODEL_TO_CATEGORY[prediction_df['class'][0]])
                 else:
                     self.labelBac.setText("Non reconnue, veuillez réessayez...")
-                print("Prediction One : ", prediction_df)
+                # print("Prediction One : ", prediction_df)
             else:
                 self.labelBac.setText("Non reconnue, veuillez réessayez...")
 
