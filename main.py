@@ -138,7 +138,7 @@ class DemoWindow(QMainWindow):
                 if prediction_df.confidence[0] >= THRESHOLD_TWO:
                     self.labelBac.setText(MODEL_TO_CATEGORY[prediction_df['class'][0]])
                 else:
-                    self.labelBac.setText("Non reconnu, veuillez réessayez...")
+                    self.labelBac.setText("Non reconnue, veuillez réessayez...")
                 print("Predictions Two: ", prediction_df)
             elif len(predictions_df) == 1:
                 prediction_df = predictions_df[0].groupby(by="class").sum().reset_index()\
@@ -146,10 +146,10 @@ class DemoWindow(QMainWindow):
                 if prediction_df.confidence[0] >= THRESHOLD_ONE:
                     self.labelBac.setText(MODEL_TO_CATEGORY[prediction_df['class'][0]])
                 else:
-                    self.labelBac.setText("Non reconnu, veuillez réessayez...")
+                    self.labelBac.setText("Non reconnue, veuillez réessayez...")
                 print("Prediction One : ", prediction_df)
             else:
-                self.labelBac.setText("Non reconnu, veuillez réessayez...")
+                self.labelBac.setText("Non reconnue, veuillez réessayez...")
 
     def convert_cv_qt(self, frame):
         """Convert from an opencv image to QPixmap"""
