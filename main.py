@@ -21,6 +21,24 @@ MODEL.conf = 0.001
 THRESHOLD = 0.6
 SIDE_WEIGHT = 0.7
 FRONT_WEIGHT = 0.3
+MODEL_TO_CATEGORY = [
+    "INJECTE PVC SUR TIGE",
+    "INJECTE TPR SUR TIGE",
+    "FULL INJECTE PVC",
+    "FULL INJECTE PVC",
+    "AUTRE",
+    "AUTRE",
+    "AUTRE",
+    "AUTRE",
+    "AUTRE",
+    "AUTRE",
+    "AUTRE",
+    "AUTRE",
+    "BOTTE TPE",
+    "AUTRE",
+    "AUTRE",
+    "INJECTE PVC SUR TIGE"
+]
 
 
 class MainWindow(QMainWindow):
@@ -104,20 +122,25 @@ class DemoWindow(QMainWindow):
 
     def detect(self):
         # Directory name with model name
-        global SIDE_WEIGHT, FRONT_WEIGHT
+        self.labelBac.setText("En attente...")
+        global SIDE_WEIGHT, FRONT_WEIGHT, THRESHOLD, MODEL_TO_CATEGORY
         if (self.results[0] is not None) and (self.results[1] is not None):
             predictions = MODEL(self.results)
             predictions_df = predictions.pandas().xyxy
-            predictions_df = [prediction_df.sort_values(by='confidence', ascending=False).loc[0:1, "confidence":"name"]
+            predictions_df = [prediction_df.sort_values(by='confidence', ascending=False).loc[:, "confidence":"name"]
                               for prediction_df in predictions_df if not prediction_df.empty]
             if len(predictions_df) > 1:
                 predictions_df[0].confidence = predictions_df[0].confidence * SIDE_WEIGHT
                 predictions_df[1].confidence = predictions_df[1].confidence * FRONT_WEIGHT
                 prediction_df = predictions_df[0].append(predictions_df[1], ignore_index=True)\
                     .groupby(by="class").sum().reset_index().sort_values(by=['confidence'], ascending=False)
+                if prediction_df.confidence[0] >= THRESHOLD:
+                    self.labelBac.setText(MODEL_TO_CATEGORY[prediction_df['class'][0]])
+                else:
+                    self.labelBac.setText("Non reconnu, veuillez réessayez...")
                 print("Predictions : ", prediction_df)
             else:
-                self.labelBac.setText("Veuillez réessayer")
+                self.labelBac.setText("Non reconnu, veuillez réessayez...")
 
     def convert_cv_qt(self, frame):
         """Convert from an opencv image to QPixmap"""
