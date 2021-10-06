@@ -1,5 +1,5 @@
 import sys
-from PySide6.QtWidgets import QApplication, QMainWindow, QPushButton, QLabel, QTextEdit
+from PySide6.QtWidgets import QApplication, QMainWindow, QPushButton, QLabel
 from PySide6.QtGui import QPixmap, QGuiApplication
 from PySide6.QtCore import Qt, QThread, Signal, Slot, QMutex
 from PySide6 import QtGui
@@ -9,9 +9,24 @@ import numpy as np
 import cv2
 import torch
 
-WEBCAM_ID_1 = 2
-WEBCAM_ID_2 = 4
-MODEL = torch.hub.load('ultralytics/yolov5', "custom", path="/home/nathan/Code/POC_DECATHLON/model/best.pt")
+
+def list_ports():
+    dev_port = 0
+    working_ports = []
+    while dev_port < 6:
+        camera = cv2.VideoCapture(dev_port)
+        if camera.isOpened():
+            is_reading, img = camera.read()
+            if is_reading:
+                working_ports.append(dev_port)
+        dev_port += 1
+    return working_ports
+
+
+WEBCAM_ID_1, WEBCAM_ID_2 = list_ports()[-2:]
+# WEBCAM_ID_1 = 0
+# WEBCAM_ID_2 = 2
+MODEL = torch.hub.load('ultralytics/yolov5', "custom", path="model/best.pt")
 MODEL.eval()
 MODEL.max_det = 2
 MODEL.conf = 0.4
@@ -227,9 +242,10 @@ class VideoThreadFront(QThread):
         self.wait()
 
 
-app = QApplication(sys.argv)
+if __name__ == "__main__":
+    app = QApplication(sys.argv)
 
-window = MainWindow()
-window.show()
+    window = MainWindow()
+    window.show()
 
-sys.exit(app.exec())
+    sys.exit(app.exec())
