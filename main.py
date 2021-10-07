@@ -23,13 +23,13 @@ def list_ports():
     return working_ports
 
 
-working_ports = list_ports()[-2:]
-if len(working_ports) == 0:
+working_ports_list = list_ports()[-2:]
+if len(working_ports_list) == 0:
     WEBCAM_ID_1, WEBCAM_ID_2 = None, None
-elif len(working_ports) == 1:
-    WEBCAM_ID_1, WEBCAM_ID_2 = working_ports[0], None
+elif len(working_ports_list) == 1:
+    WEBCAM_ID_1, WEBCAM_ID_2 = working_ports_list[0], None
 else:
-    WEBCAM_ID_1, WEBCAM_ID_2 = working_ports
+    WEBCAM_ID_1, WEBCAM_ID_2 = working_ports_list
 # WEBCAM_ID_1 = 1
 # WEBCAM_ID_2 = 2
 MODEL = torch.hub.load('ultralytics/yolov5', "custom", path="model/best.pt")
@@ -146,7 +146,7 @@ class DemoWindow(QMainWindow):
         if (self.results[0] is not None) and (self.results[1] is not None):
             predictions = MODEL(self.results)
             predictions_df = predictions.pandas().xyxy
-            print(predictions_df)
+            # print(predictions_df)
             predictions_df = [prediction_df.sort_values(by='confidence', ascending=False).loc[:, "confidence":"name"]
                               for prediction_df in predictions_df if not prediction_df.empty]
             if len(predictions_df) > 1:
@@ -158,7 +158,7 @@ class DemoWindow(QMainWindow):
                     self.labelBac.setText(MODEL_TO_CATEGORY[prediction_df['class'][0]])
                 else:
                     self.labelBac.setText("Non reconnue, veuillez réessayez...")
-                # print("Predictions Two: ", prediction_df)
+                print("Predictions Two: ", prediction_df)
             elif len(predictions_df) == 1:
                 prediction_df = predictions_df[0].groupby(by="class").sum().reset_index()\
                     .sort_values(by=['confidence'], ascending=False)
@@ -166,7 +166,7 @@ class DemoWindow(QMainWindow):
                     self.labelBac.setText(MODEL_TO_CATEGORY[prediction_df['class'][0]])
                 else:
                     self.labelBac.setText("Non reconnue, veuillez réessayez...")
-                # print("Prediction One : ", prediction_df)
+                print("Prediction One : ", prediction_df)
             else:
                 self.labelBac.setText("Non reconnue, veuillez réessayez...")
 
