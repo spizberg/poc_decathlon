@@ -23,17 +23,23 @@ def list_ports():
     return working_ports
 
 
-WEBCAM_ID_1, WEBCAM_ID_2 = list_ports()[-2:]
-# WEBCAM_ID_1 = 0
+working_ports = list_ports()[-2:]
+if len(working_ports) == 0:
+    WEBCAM_ID_1, WEBCAM_ID_2 = None, None
+elif len(working_ports) == 1:
+    WEBCAM_ID_1, WEBCAM_ID_2 = working_ports[0], None
+else:
+    WEBCAM_ID_1, WEBCAM_ID_2 = working_ports
+# WEBCAM_ID_1 = 1
 # WEBCAM_ID_2 = 2
 MODEL = torch.hub.load('ultralytics/yolov5', "custom", path="model/best.pt")
 MODEL.eval()
 MODEL.max_det = 2
 MODEL.conf = 0.4
-THRESHOLD_TWO = 0.6
-THRESHOLD_ONE = 0.7
-SIDE_WEIGHT = 0.7
-FRONT_WEIGHT = 0.3
+THRESHOLD_TWO = 0.5
+THRESHOLD_ONE = 0.5
+SIDE_WEIGHT = 0.55
+FRONT_WEIGHT = 0.45
 MODEL_TO_CATEGORY = [
     "INJECTE PVC SUR TIGE",
     "INJECTE TPR SUR TIGE",
@@ -140,6 +146,7 @@ class DemoWindow(QMainWindow):
         if (self.results[0] is not None) and (self.results[1] is not None):
             predictions = MODEL(self.results)
             predictions_df = predictions.pandas().xyxy
+            print(predictions_df)
             predictions_df = [prediction_df.sort_values(by='confidence', ascending=False).loc[:, "confidence":"name"]
                               for prediction_df in predictions_df if not prediction_df.empty]
             if len(predictions_df) > 1:
