@@ -1,0 +1,12 @@
+<RCC>
+  <qresource prefix="imageModele">
+    <file>Decathlon_Logo_real.svg</file>
+    <file>Decathlon_Logo.svg</file>
+    <file>logo-estia.png</file>
+    <file>logo-ceti.jpeg</file>
+    <file>ESTIA.png</file>
+    <file>Decathlon.png</file>
+    <file>CETI.png</file>
+  </qresource>
+  <qresource prefix="logo-decathlon.svg"/>
+</RCC>
