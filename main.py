@@ -1,13 +1,14 @@
 import sys
 from PySide6.QtWidgets import QApplication, QMainWindow, QPushButton, QLabel
 from PySide6.QtGui import QPixmap, QGuiApplication
-from PySide6.QtCore import Qt, QThread, Signal, Slot, QMutex
+from PySide6.QtCore import Qt, QThread, Signal, Slot, QMutex, QTimer
 from PySide6 import QtGui
 from ui_mainwindow import Ui_MainWindow
 from ui_demowindow import Ui_DemoWindow
 import numpy as np
 import cv2
 import torch
+from time import time
 
 
 def list_ports():
@@ -120,7 +121,25 @@ class DemoWindow(QMainWindow):
         self.pushButtonStart.clicked.connect(self.detect)
 
         # Get predictions results
-        self.labelBac = self.findChild(QLabel, 'bacPredictionLabel')
+        self.ipstLabel = self.findChild(QLabel, 'ipstLabel')
+        self.itspLabel = self.findChild(QLabel, 'itspLabel')
+        self.fipLabel = self.findChild(QLabel, 'fipLabel')
+        self.btLabel = self.findChild(QLabel, 'btLabel')
+        self.autreLabel = self.findChild(QLabel, 'autreLabel')
+        self.noneLabel = self.findChild(QLabel, 'noneLabel')
+        self.category_to_label = {
+            "INJECTE PVC SUR TIGE": self.ipstLabel,
+            "INJECTE TPR SUR TIGE": self.itspLabel,
+            "FULL INJECTE PVC": self.fipLabel,
+            "BOTTE TPE": self.btLabel,
+            "AUTRE": self.autreLabel,
+            "NONE": self.noneLabel
+        }
+        self.flag = True
+        self.timer = QTimer(self, interval=500)
+        self.blink_label = None
+        self.start = None
+        self.color = "green"
 
     def closeEvent(self, event):
         self.thread1.stop()
@@ -139,9 +158,35 @@ class DemoWindow(QMainWindow):
         qt_img = self.convert_cv_qt(frame)
         self.labelVideo2.setPixmap(qt_img)
 
+    def configure_blink(self, category):
+        self.blink_label = self.category_to_label[category]
+        self.timer.start()
+        self.start = time()
+        self.color = "yellow" if category == "NONE" else "green"
+        self.pushButtonStart.setEnabled(False)
+        self.timer.timeout.connect(self.label_blinking)
+
+    def label_blinking(self):
+        if self.flag:
+            self.blink_label.setStyleSheet("background-color: " + self.color +
+                                           "; border-radius: 10px;"
+                                           )
+        else:
+            self.blink_label.setStyleSheet("background-color: none;")
+        self.flag = not self.flag
+        stop = time()
+        if stop - self.start > 5:
+            self.flag = True
+            self.blink_label.setStyleSheet("background-color: none;")
+            self.pushButtonStart.setEnabled(True)
+            self.timer.stop()
+            try:
+                self.timer.timeout.disconnect(self.label_blinking)
+            except:
+                pass
+
     def detect(self):
         # Directory name with model name
-        self.labelBac.setText("En attente...")
         global SIDE_WEIGHT, FRONT_WEIGHT, THRESHOLD_TWO, THRESHOLD_ONE, MODEL_TO_CATEGORY
         if (self.results[0] is not None) and (self.results[1] is not None):
             predictions = MODEL(self.results)
@@ -155,20 +200,26 @@ class DemoWindow(QMainWindow):
                 prediction_df = predictions_df[0].append(predictions_df[1], ignore_index=True)\
                     .groupby(by="class").sum().reset_index().sort_values(by=['confidence'], ascending=False)
                 if prediction_df.confidence[0] >= THRESHOLD_TWO:
-                    self.labelBac.setText(MODEL_TO_CATEGORY[prediction_df['class'][0]])
+                    # self.labelBac.setText(MODEL_TO_CATEGORY[prediction_df['class'][0]])
+                    self.configure_blink(MODEL_TO_CATEGORY[prediction_df['class'][0]])
                 else:
-                    self.labelBac.setText("Non reconnue, veuillez réessayez...")
-                print("Predictions Two: ", prediction_df)
+                    # self.labelBac.setText("Non reconnue, veuillez réessayez...")
+                    self.configure_blink("NONE")
+                # print("Predictions Two: ", prediction_df)
             elif len(predictions_df) == 1:
                 prediction_df = predictions_df[0].groupby(by="class").sum().reset_index()\
                     .sort_values(by=['confidence'], ascending=False)
                 if prediction_df.confidence[0] >= THRESHOLD_ONE:
-                    self.labelBac.setText(MODEL_TO_CATEGORY[prediction_df['class'][0]])
+                    # self.labelBac.setText(MODEL_TO_CATEGORY[prediction_df['class'][0]])
+                    self.configure_blink(MODEL_TO_CATEGORY[prediction_df['class'][0]])
                 else:
-                    self.labelBac.setText("Non reconnue, veuillez réessayez...")
-                print("Prediction One : ", prediction_df)
+                    # self.labelBac.setText("Non reconnue, veuillez réessayez...")
+                    self.configure_blink("NONE")
+                # print("Prediction One : ", prediction_df)
             else:
-                self.labelBac.setText("Non reconnue, veuillez réessayez...")
+                # self.labelBac.setText("Non reconnue, veuillez réessayez...")
+                self.configure_blink("NONE")
+        # self.timer.stop()
 
     def convert_cv_qt(self, frame):
         """Convert from an opencv image to QPixmap"""
